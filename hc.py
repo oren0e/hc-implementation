@@ -1,8 +1,12 @@
-from typing import List, Tuple, NamedTuple, Callable, Union
+from typing import List, Tuple, NamedTuple, Callable, Union, Dict
 
 from math import sqrt
 
 Vector = List[float]
+
+# memoization
+memo: Dict[Tuple[Tuple[float], Tuple[float]], float] = {}
+
 
 # Define Euclidean distance
 def subtract(v: Vector, w: Vector) -> Vector:
@@ -11,20 +15,33 @@ def subtract(v: Vector, w: Vector) -> Vector:
 
     return [v_i - w_i for v_i, w_i in zip(v, w)]
 
+
 def dot(v: Vector, w: Vector) -> float:
     # make sure the vectors are of the same length
     assert len(v) == len(w), "vectors must be of the same length"
 
     return sum(v_i * w_i for v_i, w_i in zip(v, w))
 
+
 def sum_squares(v: Vector) -> float:
     return dot(v, v)
+
+
+# old distance (not efficient)
+# def distance(v: Vector, w: Vector) -> float:
+#     # make sure the vectors are of the same length
+#     assert len(v) == len(w), "vectors must be of the same length"
+#
+#     return sqrt(sum_squares(subtract(v, w)))
 
 def distance(v: Vector, w: Vector) -> float:
     # make sure the vectors are of the same length
     assert len(v) == len(w), "vectors must be of the same length"
 
-    return sqrt(sum_squares(subtract(v, w)))
+    if (tuple(v), tuple(w)) not in memo:
+        memo[(tuple(v), tuple(w))] = sqrt(sum_squares(subtract(v, w)))
+
+    return memo[(tuple(v), tuple(w))]
 
 
 """
@@ -130,3 +147,20 @@ generate_clusters(cls, num_clusters=3)
 generate_clusters(cls, num_clusters=2)
 generate_clusters(cls, num_clusters=1)
 generate_clusters(cls, num_clusters=4)  # should raise an error!
+
+# Speed testing
+import timeit
+timeit.timeit('bottom_up_cluster([[13,2,-1],[99,100,4],[15,-16,17]])',
+              'from __main__ import bottom_up_cluster', number=100000)  # 2.430 seconds
+"""
+Right now, we calculate the distance between each pair of clusters over and over again,
+even if we had done it before already. A better option will be to use memoization with a dictionary.
+I am going to change the distance function to make use of this principle. Specifically,
+I will create a dictionary which will have the pairs of clusters (leaves, basically) as its
+keys and the distance between them as the value. For that we will need to change the list of floats
+to tuple of floats in some places.
+"""
+
+# with memoization
+timeit.timeit('bottom_up_cluster([[13,2,-1],[99,100,4],[15,-16,17]])',
+              'from __main__ import bottom_up_cluster', number=100000)  # 1.835 seconds (faster!)
