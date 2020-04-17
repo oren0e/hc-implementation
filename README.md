@@ -1,2 +1,2 @@
-# hc-implementation
-Implementation of Hierarchical Clustering algorithm in Python from first principles
+# Hierarchical Clustering Implementation with Python
+Credit for the design to Joel Grus, my coding ds guru.
